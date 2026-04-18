@@ -27,11 +27,26 @@ if not exist "backend\venv" (
     echo       创建虚拟环境中... >> %LOG_FILE%
     
     cd backend
-    py -3.12 -m venv venv > ..\%LOG_FILE% 2>&1
+    py -3.12 -m venv venv 2>&1 | tee -a ..\%LOG_FILE% 2>nul || py -3.12 -m venv venv >> ..\%LOG_FILE% 2>&1
+    
     if !errorlevel! neq 0 (
-        echo       [错误] 创建虚拟环境失败！
-        echo       [错误] 创建虚拟环境失败！ >> ..\%LOG_FILE%
-        echo       请检查是否安装了 Python 3.12 >> ..\%LOG_FILE%
+        echo.
+        echo ========================================
+        echo   [错误] 创建虚拟环境失败！
+        echo ========================================
+        echo.
+        echo   可能原因：
+        echo   1. 未安装 Python 3.12
+        echo   2. Python 未添加到 PATH
+        echo.
+        echo   解决方法：
+        echo   下载安装 Python 3.12: https://www.python.org/ftp/python/3.12.8/python-3.12.8-amd64.exe
+        echo   安装时勾选 "Add Python to PATH"
+        echo.
+        echo   日志文件: %LOG_FILE%
+        echo ========================================
+        echo.
+        cd ..
         goto error_exit
     )
     cd ..
@@ -55,13 +70,37 @@ call venv\Scripts\activate.bat
 echo       安装依赖中（可能需要几分钟）...
 echo       安装依赖中... >> ..\%LOG_FILE%
 
-pip install -r requirements.txt >> ..\%LOG_FILE% 2>&1
-if !errorlevel! neq 0 (
-    echo       [错误] 后端依赖安装失败！
-    echo       [错误] 后端依赖安装失败！ >> ..\%LOG_FILE%
+REM 捕获 pip 安装输出
+pip install -r requirements.txt > pip_output.txt 2>&1
+set PIP_ERROR=!errorlevel!
+type pip_output.txt >> ..\%LOG_FILE%
+
+if !PIP_ERROR! neq 0 (
+    echo.
+    echo ========================================
+    echo   [错误] 后端依赖安装失败！
+    echo ========================================
+    echo.
+    echo   错误详情：
+    type pip_output.txt
+    echo.
+    echo   可能原因：
+    echo   1. 网络连接问题
+    echo   2. pip 版本过低
+    echo   3. 依赖包冲突
+    echo.
+    echo   尝试解决：
+    echo   pip install --upgrade pip
+    echo   pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+    echo.
+    echo   日志文件: %LOG_FILE%
+    echo ========================================
+    del pip_output.txt
     cd ..
     goto error_exit
 )
+
+del pip_output.txt
 
 echo       复制环境配置文件...
 if not exist .env (
@@ -95,14 +134,37 @@ if exist package-lock.json (
 echo       安装依赖中（可能需要几分钟）...
 echo       安装依赖中... >> ..\%LOG_FILE%
 
-npm install >> ..\%LOG_FILE% 2>&1
-if !errorlevel! neq 0 (
-    echo       [错误] 前端依赖安装失败！
-    echo       [错误] 前端依赖安装失败！ >> ..\%LOG_FILE%
+REM 捕获 npm 安装输出
+npm install > npm_output.txt 2>&1
+set NPM_ERROR=!errorlevel!
+type npm_output.txt >> ..\%LOG_FILE%
+
+if !NPM_ERROR! neq 0 (
+    echo.
+    echo ========================================
+    echo   [错误] 前端依赖安装失败！
+    echo ========================================
+    echo.
+    echo   错误详情：
+    type npm_output.txt
+    echo.
+    echo   可能原因：
+    echo   1. 未安装 Node.js
+    echo   2. 网络连接问题
+    echo   3. npm 源访问慢
+    echo.
+    echo   尝试解决：
+    echo   npm install -g cnpm --registry=https://registry.npmmirror.com
+    echo   cnpm install
+    echo.
+    echo   日志文件: %LOG_FILE%
+    echo ========================================
+    del npm_output.txt
     cd ..
     goto error_exit
 )
 
+del npm_output.txt
 cd ..
 echo       [成功] 前端依赖安装完成
 echo       [成功] 前端依赖安装完成 >> %LOG_FILE%
@@ -113,20 +175,25 @@ REM ========== 第四步：检查端口占用 ==========
 echo [4/6] 检查端口占用...
 echo [4/6] 检查端口占用... >> %LOG_FILE%
 
+set PORT_WARNING=0
 netstat -ano | findstr ":8000 " >nul
 if !errorlevel! equ 0 (
-    echo       [警告] 端口 8000 已被占用，后端可能启动失败
+    echo       [警告] 端口 8000 已被占用
     echo       [警告] 端口 8000 已被占用 >> %LOG_FILE%
+    set PORT_WARNING=1
 )
 
 netstat -ano | findstr ":3000 " >nul
 if !errorlevel! equ 0 (
-    echo       [警告] 端口 3000 已被占用，前端可能启动失败
+    echo       [警告] 端口 3000 已被占用
     echo       [警告] 端口 3000 已被占用 >> %LOG_FILE%
+    set PORT_WARNING=1
 )
 
-echo       [成功] 端口检查完成
-echo       [成功] 端口检查完成 >> %LOG_FILE%
+if !PORT_WARNING! equ 0 (
+    echo       [成功] 端口未被占用
+    echo       [成功] 端口未被占用 >> %LOG_FILE%
+)
 
 echo. >> %LOG_FILE%
 
@@ -138,7 +205,7 @@ cd backend
 start "直播运营系统-后端服务" cmd /k "venv\Scripts\activate && python -m uvicorn app.main:app --reload --port 8000"
 cd ..
 
-echo       等待后端启动...
+echo       等待后端启动（5秒）...
 timeout /t 5 >nul
 
 REM 检查后端是否启动成功
@@ -147,7 +214,7 @@ if !errorlevel! equ 0 (
     echo       [成功] 后端服务启动成功
     echo       [成功] 后端服务启动成功 >> %LOG_FILE%
 ) else (
-    echo       [警告] 后端服务可能未启动成功，请检查后端窗口
+    echo       [警告] 后端服务可能未启动成功，请查看后端窗口
     echo       [警告] 后端服务可能未启动成功 >> %LOG_FILE%
 )
 
@@ -161,7 +228,7 @@ cd frontend
 start "直播运营系统-前端服务" cmd /k "npm run dev"
 cd ..
 
-echo       等待前端启动...
+echo       等待前端启动（5秒）...
 timeout /t 5 >nul
 
 echo. >> %LOG_FILE%
@@ -177,7 +244,6 @@ echo   后端地址: http://localhost:8000
 echo   API文档:  http://localhost:8000/docs
 echo.
 echo   日志文件: %LOG_FILE%
-echo   如有问题请查看日志文件或截图发给我
 echo ========================================
 echo.
 echo   按任意键退出...
@@ -188,16 +254,11 @@ REM ========== 错误退出 ==========
 :error_exit
 echo.
 echo ========================================
-echo   [失败] 安装过程中出现错误！
+echo   发生错误，安装终止！
 echo ========================================
 echo.
-echo   请查看日志文件: %LOG_FILE%
-echo   或将日志内容发给我分析
-echo.
-echo   常见问题：
-echo   1. Python 3.12 未安装
-echo   2. Node.js 未安装
-echo   3. 网络连接问题
+echo   请截图以上错误信息发给小v分析
+echo   日志文件: %LOG_FILE%
 echo.
 echo   按任意键退出...
 pause >nul

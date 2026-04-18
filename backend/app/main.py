@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.api import auth, watermark, title_generator, health, editor, dashboard
+from app.api import auth, watermark, title_generator, health, editor, dashboard, config
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -25,6 +25,7 @@ app.include_router(watermark.router, prefix="/api/watermark", tags=["watermark"]
 app.include_router(title_generator.router, prefix="/api/title", tags=["title"])
 app.include_router(editor.router, prefix="/api/editor", tags=["editor"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"])
+app.include_router(config.router, prefix="/api", tags=["config"])
 
 @app.on_event("startup")
 async def startup_event():

@@ -235,18 +235,24 @@ echo. >> %LOG_FILE%
 
 REM ========== Done ==========
 echo.
+echo.
 echo ========================================
-echo   Installation complete!
+echo.
+echo       S U C C E S S !
+echo.
 echo ========================================
+echo.
+echo   All steps completed successfully!
 echo.
 echo   Frontend: http://localhost:3000
 echo   Backend:  http://localhost:8000
 echo   API Docs: http://localhost:8000/docs
 echo.
 echo   Log file: %LOG_FILE%
+echo.
 echo ========================================
 echo.
-echo   Press any key to exit...
+echo   Press any key to close this window...
 pause >nul
 exit /b 0
 

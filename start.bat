@@ -1,46 +1,51 @@
 @echo off
+chcp 65001 >nul
 echo ========================================
-echo   直播运营系统 - 启动脚本
+echo   Live Ops System - Quick Start
 echo ========================================
 echo.
 
-:: 检查 Python
+:: Check Python
 python --version >nul 2>&1
 if errorlevel 1 (
-    echo [错误] 未找到 Python，请先安装 Python 3.10+
+    echo [ERROR] Python not found, please install Python 3.12+
     pause
     exit /b 1
 )
 
-:: 检查 Node.js
+:: Check Node.js
 node --version >nul 2>&1
 if errorlevel 1 (
-    echo [错误] 未找到 Node.js，请先安装 Node.js 18+
+    echo [ERROR] Node.js not found, please install Node.js 18+
     pause
     exit /b 1
 )
 
-echo [1/4] 安装后端依赖...
+echo [1/4] Installing backend dependencies...
 cd backend
+set PYTHONUTF8=1
 pip install -r requirements.txt -q
 
-echo [2/4] 安装前端依赖...
+echo [2/4] Installing frontend dependencies...
 cd ..\frontend
 call npm install --silent
 
-echo [3/4] 启动后端服务...
+echo [3/4] Starting backend service...
 cd ..\backend
-start "后端服务" cmd /k "uvicorn app.main:app --reload --port 8000"
+start "Backend Service" cmd /k "set PYTHONUTF8=1 && python -m uvicorn app.main:app --reload --port 8000"
 
-echo [4/4] 启动前端服务...
+echo [4/4] Starting frontend service...
 cd ..\frontend
-start "前端服务" cmd /k "npm run dev"
+start "Frontend Service" cmd /k "npm run dev"
+
+cd ..
 
 echo.
 echo ========================================
-echo   启动完成！
-echo   前端: http://localhost:3000
-echo   后端: http://localhost:8000
+echo   Start complete!
+echo   Frontend: http://localhost:3000
+echo   Backend:  http://localhost:8000
+echo   API Docs: http://localhost:8000/docs
 echo ========================================
 echo.
 pause

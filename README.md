@@ -28,40 +28,66 @@
 
 - Node.js 18+
 - Python 3.12+ (推荐 3.12，暂不支持 3.14)
+- Git
 
-### 前端启动
+### 一键启动（推荐）
 
+**Windows:**
+```bash
+# 拉取最新代码
+git pull
+
+# 双击运行或执行：
+reinstall_and_start.bat
+```
+
+**Mac/Linux:**
+```bash
+# 拉取最新代码
+git pull
+
+# 执行：
+chmod +x reinstall_and_start.sh && ./reinstall_and_start.sh
+```
+
+脚本会自动：
+1. 创建 Python 虚拟环境
+2. 安装后端依赖
+3. 安装前端依赖
+4. 启动后端服务 (端口 8000)
+5. 启动前端服务 (端口 3000)
+
+### 访问地址
+
+| 服务 | 地址 |
+|------|------|
+| 前端页面 | http://localhost:3000 |
+| 后端 API | http://localhost:8000 |
+| API 文档 | http://localhost:8000/docs |
+
+### 手动启动（备用）
+
+**前端启动:**
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-访问 http://localhost:3000
-
-### 后端启动
-
+**后端启动:**
 ```bash
 cd backend
-
-# 创建虚拟环境（推荐）
 py -3.12 -m venv venv
-venv\Scripts\activate
+venv\Scripts\activate          # Windows
+# source venv/bin/activate     # Mac/Linux
 
-# 安装依赖
 pip install -r requirements.txt
+copy .env.example .env         # Windows
+# cp .env.example .env         # Mac/Linux
 
-# 复制环境配置文件
-copy .env.example .env
-
-# 编辑 .env 文件，配置你的 API Key
-# WAVESPEED_API_KEY=your_api_key_here
-
-# 启动服务
+# 编辑 .env 配置 API Key 后启动
 python -m uvicorn app.main:app --reload --port 8000
 ```
-
-API文档: http://localhost:8000/docs
 
 ## 智能去水印功能
 
@@ -137,42 +163,35 @@ API文档: http://localhost:8000/docs
 │   ├── .env.example    # 环境变量示例
 │   └── requirements.txt
 │
-├── setup_git.bat       # Git 仓库初始化脚本
-├── setup_git.sh
-├── start.bat           # 一键启动脚本
+├── reinstall_and_start.bat  # Windows 一键重装启动
+├── reinstall_and_start.sh   # Mac/Linux 一键重装启动
+├── start.bat           # 快速启动（不重装依赖）
 ├── start.sh
 └── README.md
 ```
 
 ## Git 管理
 
-### 初始化仓库
+### 仓库地址
 
-```bash
-# 方式一：使用脚本（推荐）
-双击 setup_git.bat
-
-# 方式二：手动操作
-git init
-git add .
-git commit -m "初始化项目"
-git branch -M main
-git remote add origin https://github.com/你的用户名/仓库名.git
-git push -u origin main
 ```
-
-### 后续更新
-
-```bash
-git add .
-git commit -m "更新说明"
-git push
+https://github.com/806279303/coze-black-project.git
 ```
 
 ### 拉取更新
 
 ```bash
 git pull
+```
+
+### 更新后重启
+
+```bash
+# Windows
+reinstall_and_start.bat
+
+# Mac/Linux
+./reinstall_and_start.sh
 ```
 
 ## 开发进度
@@ -193,9 +212,8 @@ git pull
 
 | 版本 | 日期 | 变更内容 |
 |------|------|----------|
-| v1.4.0 | 2026-04-19 | 实现 WaveSpeedAI 去水印 API 真正对接，完善错误处理 |
+| v1.4.0 | 2026-04-19 | 实现 WaveSpeedAI 去水印 API 真正对接，完善错误处理，添加一键重装启动脚本 |
 | v1.3.0 | 2026-04-19 | 适配 Python 3.14（后改为推荐 3.12） |
-| v1.2.3 | 2026-04-19 | 修复 React Router Outlet 问题 |
 | v1.2.0 | 2026-04-18 | 完成所有核心模块开发 |
 | v1.0.0 | 2026-04-18 | 项目初始化 |
 
